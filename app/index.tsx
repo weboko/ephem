@@ -1,6 +1,11 @@
+import "event-target-polyfill";
+
 import { Text, View } from "react-native";
+import { createLightNode } from "@waku/sdk";
 
 export default function Index() {
+  createLightNode({});
+
   return (
     <View
       style={{
