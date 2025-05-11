@@ -32,16 +32,18 @@ const ContactsScreen = () => {
   // Render a contact with action buttons
   const renderContact = (contact: any) => (
     <View key={contact.id} style={styles.contactWrapper}>
-      <ContactItem 
-        contact={contact} 
-        onPress={() => handleOpenChat(contact.id)}
-      />
-      <TouchableOpacity 
-        style={styles.infoButton}
-        onPress={() => handleContactInfo(contact.id)}
-      >
-        <Ionicons name="information-circle-outline" size={20} color={Colors.primary} />
-      </TouchableOpacity>
+      <View style={styles.contactMainContainer}>
+        <ContactItem 
+          contact={contact} 
+          onPress={() => handleOpenChat(contact.id)}
+        />
+        <TouchableOpacity 
+          style={styles.infoButton}
+          onPress={() => handleContactInfo(contact.id)}
+        >
+          <Ionicons name="information-circle-outline" size={20} color={Colors.primary} />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 
@@ -121,8 +123,13 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   contactWrapper: {
+    width: '100%',
+  },
+  contactMainContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
   },
   infoButton: {
     padding: Spacing.small,

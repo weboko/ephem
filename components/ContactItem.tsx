@@ -38,6 +38,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.medium,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(0, 255, 65, 0.1)',
+    flex: 1,
   },
   contactInfo: {
     flex: 1,
