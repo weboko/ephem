@@ -12,7 +12,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
   const [dots, setDots] = useState('.');
   const fadeAnim = useState(new Animated.Value(0.3))[0];
 
-  // Blinking effect for the matrix-style UI
+  // Blinking effect for the minimalist UI
   useEffect(() => {
     const fadeAnimation = Animated.sequence([
       Animated.timing(fadeAnim, {
@@ -46,8 +46,8 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.title}>CYPHERNET</Text>
-        <Text style={styles.subtitle}>EPHEMERAL • SECURE • ENCRYPTED</Text>
+        <Text style={styles.title}>EPHEM</Text>
+        <Text style={styles.subtitle}>EPHEMERAL • MINIMALIST • SECURE</Text>
         
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.primary} />
@@ -56,7 +56,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
           </Animated.View>
         </View>
         
-        <Text style={styles.securityText}>[ INITIALIZING ENCRYPTION ]</Text>
+        <Text style={styles.securityText}>[ INITIALIZING ]</Text>
       </View>
     </View>
   );

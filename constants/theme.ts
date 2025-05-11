@@ -1,20 +1,21 @@
 import { StyleSheet } from 'react-native';
 import { Platform } from 'react-native';
 
+// Ephem Theme - Minimalist Black & White
 export const Colors = {
   background: '#000000',
   card: '#121212',
-  primary: '#00FF41', // Matrix green
-  secondary: '#4deeea', // Cyan accent
+  primary: '#FFFFFF', // White (was Matrix green)
+  secondary: '#EEEEEE', // Light grey (was Cyan accent)
   text: '#FFFFFF',
-  textSecondary: '#00cc33', // Muted Matrix green
-  border: '#0a140a',
+  textSecondary: '#AAAAAA', // Light grey (was Muted Matrix green)
+  border: '#333333',
   error: '#FF453A',
-  online: '#00FF41',
-  offline: '#4A4A4A',
-  terminal: '#00cc33', // For code-like or terminal-like elements
-  highlight: '#00FF41', // For highlights and selections
-  faded: 'rgba(0, 255, 65, 0.3)', // Transparent green for subtle effects
+  online: '#FFFFFF',
+  offline: '#666666',
+  terminal: '#FFFFFF', // For code-like or terminal-like elements
+  highlight: '#FFFFFF', // For highlights and selections
+  faded: 'rgba(255, 255, 255, 0.3)', // Transparent white for subtle effects
 };
 
 export const Typography = {
@@ -22,32 +23,32 @@ export const Typography = {
     fontSize: 20,
     fontWeight: '600',
     color: Colors.text,
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    fontFamily: Platform.OS === 'ios' ? 'Helvetica' : 'sans-serif',
     letterSpacing: 1,
   },
   body: {
     fontSize: 16,
     fontWeight: '400',
     color: Colors.text,
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    fontFamily: Platform.OS === 'ios' ? 'Helvetica' : 'sans-serif',
   },
   caption: {
     fontSize: 13,
     fontWeight: '400',
     color: Colors.textSecondary,
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    fontFamily: Platform.OS === 'ios' ? 'Helvetica' : 'sans-serif',
   },
   button: {
     fontSize: 17,
     fontWeight: '600',
     color: Colors.primary,
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    fontFamily: Platform.OS === 'ios' ? 'Helvetica' : 'sans-serif',
   },
   digital: {
     fontSize: 12,
     fontWeight: '400',
     color: Colors.terminal,
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    fontFamily: Platform.OS === 'ios' ? 'Helvetica' : 'sans-serif',
     letterSpacing: 0.5,
   },
 };
@@ -102,7 +103,7 @@ export const CommonStyles = StyleSheet.create({
     color: Colors.primary,
     fontSize: 18,
     fontWeight: '600',
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    fontFamily: Platform.OS === 'ios' ? 'Helvetica' : 'sans-serif',
   },
   button: {
     backgroundColor: Colors.card,
@@ -115,7 +116,7 @@ export const CommonStyles = StyleSheet.create({
     justifyContent: 'center',
   },
   terminalText: {
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    fontFamily: Platform.OS === 'ios' ? 'Helvetica' : 'sans-serif',
     color: Colors.terminal,
   },
   matrixBackground: {
@@ -126,6 +127,6 @@ export const CommonStyles = StyleSheet.create({
     color: Colors.terminal,
     textTransform: 'uppercase',
     letterSpacing: 2,
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    fontFamily: Platform.OS === 'ios' ? 'Helvetica' : 'sans-serif',
   },
 });
