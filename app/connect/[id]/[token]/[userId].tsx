@@ -14,25 +14,20 @@ export default function ConnectionScreen() {
   const [connectionStatus, setConnectionStatus] = useState<'pending' | 'success' | 'error'>('pending');
 
   useEffect(() => {
-    // Log the connection parameters for debugging
     console.log('Connection params:', { connectionId: id, token, contactUserId: userId });
     
-    // In a real app, you would verify the connection and establish secure communication
     const verifyConnection = async () => {
       try {
         setIsProcessing(true);
         
-        // Simulate connection verification
         await new Promise(resolve => setTimeout(resolve, 2000));
         
         // For demo purposes, we'll always succeed if we have valid params
         if (id && userId) {
           setConnectionStatus('success');
           
-          // Generate a contact name based on the ID
           const contactName = `User ${userId.substring(0, 4)}`;
           
-          // Add the contact to our list
           addContact({
             id: userId,
             name: contactName,

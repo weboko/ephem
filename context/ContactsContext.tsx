@@ -42,15 +42,13 @@ export function ContactsProvider({ children }: { children: React.ReactNode }) {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Simulate loading the contacts data
   useEffect(() => {
     const loadContacts = async () => {
       try {
-        // In a real app, you might fetch these from an API or storage
         setTimeout(() => {
           setContacts(defaultContacts);
           setIsLoading(false);
-        }, 1200); // Simulate network delay
+        }, 1200);
       } catch (error) {
         console.error('Error loading contacts:', error);
         setIsLoading(false);

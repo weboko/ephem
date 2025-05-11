@@ -5,6 +5,7 @@ import { Colors, Typography, Spacing } from '../constants/theme';
 import { useAuth } from '../context/AuthContext';
 import { useState, useEffect, useCallback } from 'react';
 import QRCode from 'react-native-qrcode-svg';
+import contacts from '@/services/contacts';
 
 export default function QRCodeScreen() {
   const { currentUser } = useAuth();
@@ -16,11 +17,11 @@ export default function QRCodeScreen() {
   }, []);
   
   const generateConnectionId = useCallback(() => {
-    const newId = crypto.randomUUID();
-    setConnectionId(newId);
+    const invite = contacts.createInvite();
+    setConnectionId(invite.id);
 
     const baseUrl = 'ephem://connect';
-    const link = `${baseUrl}/${newId}/pubkey/${currentUser?.id || ''}`;
+    const link = `${baseUrl}/${invite.id}/pubkey/${currentUser?.id || ''}`;
     setSpecialLink(link);
   }, [currentUser?.id]);
   
