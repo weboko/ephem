@@ -1,5 +1,4 @@
 import PersistentStorage from '../utils/persistentStorage';
-import { Platform, Alert } from 'react-native';
 
 const STORAGE_KEY = 'app_passkeys';
 

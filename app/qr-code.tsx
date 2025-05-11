@@ -11,33 +11,42 @@ export default function QRCodeScreen() {
   const [connectionId, setConnectionId] = useState<string | null>(null);
   const [specialLink, setSpecialLink] = useState<string | null>(null);
   
-  // Generate a new UUID when the component mounts
   useEffect(() => {
     generateConnectionId();
   }, []);
   
-  // Generate a cryptographic UUID and create a special link
   const generateConnectionId = useCallback(() => {
-    // Generate a UUID using crypto.randomUUID() API
     const newId = crypto.randomUUID();
     setConnectionId(newId);
 
-    const link = `https://weboko.github.io/ephem/connect/${newId}/placeholder/${currentUser?.id || ''}`;
+    const baseUrl = 'ephem://connect';
+    const link = `${baseUrl}/${newId}/pubkey/${currentUser?.id || ''}`;
     setSpecialLink(link);
   }, [currentUser?.id]);
   
-  // Function to copy the link to clipboard
   const copyLinkToClipboard = async () => {
     if (!specialLink) return;
     
     try {
-      // Using the Clipboard API to copy the text
       await Clipboard.setString(specialLink);
       Alert.alert('Success', 'Link copied to clipboard');
     } catch (error) {
       console.error('Error copying link to clipboard:', error);
       Alert.alert('Error', 'Failed to copy link to clipboard');
     }
+  };
+  
+  const handleTestConnection = () => {
+    if (!connectionId || !currentUser?.id) return;
+
+    router.push({
+      pathname: '/connect/[id]/[token]/[userId]',
+      params: { 
+        id: connectionId,
+        token: 'placeholder',
+        userId: currentUser.id
+      }
+    });
   };
   
   return (
@@ -62,6 +71,7 @@ export default function QRCodeScreen() {
                 color={Colors.primary}
                 backgroundColor={Colors.background}
               />
+              <Text style={styles.ephemeralNotice}>EXPIRES ON APP CLOSE</Text>
             </View>
           ) : (
             <View style={styles.qrPlaceholder}>
@@ -87,6 +97,13 @@ export default function QRCodeScreen() {
           <Ionicons name="refresh-outline" size={20} color={Colors.primary} />
           <Text style={styles.refreshButtonText}>GENERATE NEW CODE</Text>
         </TouchableOpacity>
+        
+        {__DEV__ && (
+          <TouchableOpacity style={styles.testButton} onPress={handleTestConnection}>
+            <Ionicons name="code-working-outline" size={20} color={Colors.primary} />
+            <Text style={styles.testButtonText}>TEST CONNECTION (DEV ONLY)</Text>
+          </TouchableOpacity>
+        )}
         
         <Text style={styles.securityNote}>
           This QR code contains a one-time cryptographic key.{"\n"}
@@ -186,36 +203,6 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
     fontSize: 10,
   },
-  userInfo: {
-    alignItems: 'center',
-    marginBottom: Spacing.large,
-  },
-  avatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: Colors.card,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: Spacing.small,
-    borderWidth: 1,
-    borderColor: Colors.primary,
-  },
-  avatarText: {
-    color: Colors.primary,
-    fontSize: 24,
-    fontWeight: '600',
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-  },
-  userName: {
-    ...Typography.body,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  userId: {
-    ...Typography.caption,
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-  },
   shareButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -242,6 +229,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.primary,
     borderStyle: 'dashed',
+    marginBottom: Spacing.medium,
   },
   refreshButtonText: {
     color: Colors.primary,
@@ -249,6 +237,21 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.small,
     fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
     letterSpacing: 0.5,
+  },
+  testButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    paddingVertical: Spacing.small,
+    paddingHorizontal: Spacing.medium,
+    borderRadius: 4,
+    marginBottom: Spacing.medium,
+  },
+  testButtonText: {
+    color: Colors.primary,
+    fontSize: 12,
+    marginLeft: Spacing.small,
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
   securityNote: {
     ...Typography.caption,

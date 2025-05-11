@@ -98,5 +98,4 @@ class EphemeralStorage {
   }
 }
 
-// Export a singleton instance
 export default new EphemeralStorage();
