@@ -41,7 +41,7 @@
       "bundler": "metro",
       "output": "static",
       "favicon": "./assets/images/favicon.png",
-      "publicPath": "/[your-repo-name]/"
+      "publicPath": "/ephem/"
     },
     "plugins": [
       "expo-router",
