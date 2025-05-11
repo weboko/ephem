@@ -1,0 +1,104 @@
+import React from "react";
+import { View, Text, SafeAreaView, StyleSheet, TouchableOpacity, FlatList, Platform } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { Colors, Typography, Spacing } from "../constants/theme";
+import { useContacts } from "../context/ContactsContext";
+import { useAuth } from "../context/AuthContext";
+import { router } from "expo-router";
+import ContactItem from "./ContactItem";
+
+const ContactsScreen = () => {
+  const { contacts } = useContacts();
+  const { currentUser } = useAuth();
+  
+  // Separate online and offline contacts
+  const onlineContacts = contacts.filter(contact => contact.isOnline);
+  const offlineContacts = contacts.filter(contact => !contact.isOnline);
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.headerButton} onPress={() => router.push('/qr-code')}>
+          <Ionicons name="qr-code-outline" size={24} color={Colors.primary} />
+        </TouchableOpacity>
+        
+        <View>
+          <Text style={styles.headerTitle}>CYPHERNET</Text>
+          <Text style={styles.headerSubtitle}>SECURE • EPHEMERAL • PRIVATE</Text>
+        </View>
+        
+        <TouchableOpacity style={styles.headerButton} onPress={() => router.push('/settings')}>
+          <Ionicons name="settings-outline" size={24} color={Colors.primary} />
+        </TouchableOpacity>
+      </View>
+      
+      <FlatList
+        data={[
+          { title: 'ONLINE', data: onlineContacts },
+          { title: 'OFFLINE', data: offlineContacts }
+        ]}
+        keyExtractor={(item) => item.title}
+        renderItem={({ item }) => (
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>{item.title}</Text>
+            {item.data.map(contact => (
+              <ContactItem 
+                key={contact.id} 
+                contact={contact} 
+                onPress={() => router.push({
+                  pathname: '/contact/[id]',
+                  params: { id: contact.id }
+                })}
+              />
+            ))}
+          </View>
+        )}
+      />
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.medium,
+    paddingVertical: Spacing.small,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.primary,
+    backgroundColor: '#0a0a0a',
+  },
+  headerTitle: {
+    ...Typography.title,
+    color: Colors.primary,
+    textAlign: 'center',
+    letterSpacing: 1.5,
+  },
+  headerSubtitle: {
+    fontSize: 10,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    letterSpacing: 1,
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+  },
+  headerButton: {
+    padding: Spacing.small,
+  },
+  section: {
+    marginBottom: Spacing.medium,
+  },
+  sectionHeader: {
+    ...Typography.caption,
+    color: Colors.primary,
+    marginHorizontal: Spacing.medium,
+    marginVertical: Spacing.small,
+    letterSpacing: 1,
+  },
+});
+
+export default ContactsScreen;

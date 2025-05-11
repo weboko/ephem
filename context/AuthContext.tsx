@@ -1,29 +1,22 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 import EphemeralStorage from '../utils/ephemeralStorage';
+import IdentityService, { PassKey } from '../services/identity';
 import { LoadingScreen } from '../components/LoadingScreen';
 
-type User = {
-  id: string;
-  name: string;
-  profileImage?: string;
-};
+type User = PassKey;
 
 type AuthContextType = {
   currentUser: User | null;
   users: User[];
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (userId: string) => void;
+  login: (userId: string) => Promise<boolean>;
   logout: () => void;
-  createAccount: (name: string) => void;
+  createAccount: () => Promise<void>;
+  deleteAccount: (userId: string) => Promise<void>;
+  isPassKeySupported: boolean;
 };
-
-const defaultUsers: User[] = [
-  { id: '1', name: 'John Doe' },
-  { id: '2', name: 'Jane Smith' },
-  { id: '3', name: 'Alex Wilson' },
-];
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -36,10 +29,32 @@ export const useAuth = () => {
 };
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [users, setUsers] = useState<User[]>(defaultUsers);
+  const [users, setUsers] = useState<User[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isPassKeySupported, setIsPassKeySupported] = useState(false);
+
+  // Load users (passkeys) and check if passkeys are supported
+  useEffect(() => {
+    const initializeAuth = async () => {
+      try {
+        // Check if passkeys are supported on this device
+        const supported = IdentityService.isSupported();
+        setIsPassKeySupported(supported);
+        
+        // Load all registered passkeys
+        const passkeys = await IdentityService.getPassKeys();
+        setUsers(passkeys);
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeAuth();
+  }, []);
 
   // Add AppState listener to clear ephemeral storage when app is closed or backgrounded
   useEffect(() => {
@@ -54,30 +69,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Subscribe to app state changes
     const subscription = AppState.addEventListener('change', handleAppStateChange);
 
-    // Simulate loading auth state (in a real app, this might be checking AsyncStorage, etc.)
-    const initAuth = setTimeout(() => {
-      setIsLoading(false);
-    }, 1500);
-
     // Clean up the subscription when component unmounts
     return () => {
       subscription.remove();
-      clearTimeout(initAuth);
     };
   }, []);
 
-  const login = (userId: string) => {
+  const login = async (userId: string): Promise<boolean> => {
     setIsLoading(true);
     
-    // Simulate login process
-    setTimeout(() => {
-      const user = users.find(u => u.id === userId);
-      if (user) {
-        setCurrentUser(user);
-        setIsAuthenticated(true);
+    try {
+      // Verify the passkey - this will now trigger OS authentication UI
+      const isValid = await IdentityService.verifyPassKey(userId);
+      
+      if (isValid) {
+        // Get the updated passkey (with lastUsed timestamp)
+        const user = await IdentityService.getPassKeyById(userId);
+        if (user) {
+          setCurrentUser(user);
+          setIsAuthenticated(true);
+          return true;
+        }
       }
+      return false;
+    } catch (error) {
+      console.error('Error during login:', error);
+      return false;
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   const logout = () => {
@@ -93,20 +113,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, 800);
   };
 
-  const createAccount = (name: string) => {
+  const createAccount = async () => {
     setIsLoading(true);
     
-    // Simulate account creation
-    setTimeout(() => {
-      const newUser: User = {
-        id: Date.now().toString(),
-        name,
-      };
-      setUsers([...users, newUser]);
-      setCurrentUser(newUser);
+    try {
+      // Create a new passkey
+      const newPassKey = await IdentityService.createPassKey();
+      
+      // Update local state
+      setUsers(prevUsers => [...prevUsers, newPassKey]);
+      setCurrentUser(newPassKey);
       setIsAuthenticated(true);
+    } catch (error) {
+      console.error('Error creating account:', error);
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
+  };
+
+  const deleteAccount = async (userId: string): Promise<void> => {
+    setIsLoading(true);
+    
+    try {
+      // Delete the passkey from storage
+      await IdentityService.deletePassKey(userId);
+      
+      // Update local state - force a fresh fetch of passkeys
+      const updatedPasskeys = await IdentityService.getPassKeys();
+      setUsers(updatedPasskeys);
+      
+      // If the deleted account was the current user, log them out
+      if (currentUser && currentUser.id === userId) {
+        setCurrentUser(null);
+        setIsAuthenticated(false);
+        EphemeralStorage.clear();
+      }
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      throw error; // Re-throw so the UI can handle it
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const value = {
@@ -117,6 +164,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     login,
     logout,
     createAccount,
+    deleteAccount,
+    isPassKeySupported,
   };
 
   if (isLoading) {
