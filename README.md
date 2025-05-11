@@ -1,50 +1,88 @@
-# Welcome to your Expo app 👋
+# Ephem
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Ephem is a ephemeral messaging application built with React Native that uses Waku protocol for secure, private communication.
 
-## Get started
+Specification of the application - [EPHEM-001.md](./EPHEM-001.md).
 
-1. Install dependencies
+WARN: for now only works on Browser build.
 
-   ```bash
-   npm install
-   ```
+## Description
 
-2. Start the app
+Ephem uses only ephemeral messaging from Waku:
+- [js-waku](https://github.com/waku-org/js-waku) family of libraries;
+- [LightPush](https://github.com/vacp2p/rfc-index/blob/main/waku/standards/core/19/lightpush.md);
+- [Filter](https://github.com/vacp2p/rfc-index/blob/main/waku/standards/core/12/filter.md);
 
-   ```bash
-   npx expo start
-   ```
+## Prerequisites
 
-In the output, you'll find options to open the app in a
+- Node.js (v16 or newer)
+- npm or yarn
+- For mobile development:
+  - iOS: XCode and CocoaPods (for iOS simulator)
+  - Android: Android Studio with SDK and emulator
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Running the Application
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### Mobile Development
 
-## Get a fresh project
-
-When you're ready, run:
+Start the Expo development server:
 
 ```bash
-npm run reset-project
+npm start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+This will display a QR code and options to run the app:
 
-## Learn more
+- Press `i` to open in iOS simulator
+- Press `a` to open in Android emulator
+- Scan the QR code with Expo Go app on your physical device
 
-To learn more about developing your project with Expo, look at the following resources:
+Alternatively, you can use these direct commands:
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```bash
+# For web
+npm run web
 
-## Join the community
+# For iOS
+npm run ios
 
-Join our community of developers creating universal apps.
+# For Android
+npm run android
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Building for Production
+
+### Web Build
+
+Create a production build for web deployment:
+
+```bash
+npm run build:web
+```
+
+This will generate the build in the `dist` directory.
+
+### Deploy to GitHub Pages
+
+The project is configured for GitHub Pages deployment:
+
+```bash
+npm run deploy
+```
+
+This runs the build process and deploys to GitHub Pages.
+
+## Application Structure
+
+- `app/` - Main application code using file-based routing
+- `components/` - Reusable UI components
+- `context/` - React context providers for state management
+- `services/` - Core functionality services
+- `utils/` - Utility functions
+
+## Features
+
+- Secure messaging via Waku protocol
+- QR code connectivity
+- Contact management
+- End-to-end encryption
