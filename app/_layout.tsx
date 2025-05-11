@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { AuthProvider } from '../context/AuthContext';
 import { ContactsProvider } from '../context/ContactsContext';
 import { WakuProvider } from '../context/WakuContext';
+import { ChatProvider } from '../context/ChatContext';
 import { useEphemeralStorageCleanup } from '../utils/useEphemeralStorageCleanup';
 
 function AppContainer({ children }: { children: React.ReactNode }) {
@@ -20,10 +21,12 @@ export default function RootLayout() {
     <AuthProvider>
       <WakuProvider>
         <ContactsProvider>
-          <AppContainer>
-            <StatusBar style="light" />
-            <Slot />
-          </AppContainer>
+          <ChatProvider>
+            <AppContainer>
+              <StatusBar style="light" />
+              <Slot />
+            </AppContainer>
+          </ChatProvider>
         </ContactsProvider>
       </WakuProvider>
     </AuthProvider>

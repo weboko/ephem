@@ -13,6 +13,38 @@ const ContactsScreen = () => {
   const onlineContacts = contacts.filter(contact => contact.isOnline);
   const offlineContacts = contacts.filter(contact => !contact.isOnline);
 
+  // Function to handle navigating to contact info
+  const handleContactInfo = (contactId: string) => {
+    router.push({
+      pathname: '/contact/[id]',
+      params: { id: contactId }
+    });
+  };
+
+  // Function to handle navigating to chat
+  const handleOpenChat = (contactId: string) => {
+    router.push({
+      pathname: '/chat/[id]',
+      params: { id: contactId }
+    });
+  };
+
+  // Render a contact with action buttons
+  const renderContact = (contact: any) => (
+    <View key={contact.id} style={styles.contactWrapper}>
+      <ContactItem 
+        contact={contact} 
+        onPress={() => handleOpenChat(contact.id)}
+      />
+      <TouchableOpacity 
+        style={styles.infoButton}
+        onPress={() => handleContactInfo(contact.id)}
+      >
+        <Ionicons name="information-circle-outline" size={20} color={Colors.primary} />
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -39,16 +71,7 @@ const ContactsScreen = () => {
         renderItem={({ item }) => (
           <View style={styles.section}>
             <Text style={styles.sectionHeader}>{item.title}</Text>
-            {item.data.map(contact => (
-              <ContactItem 
-                key={contact.id} 
-                contact={contact} 
-                onPress={() => router.push({
-                  pathname: '/contact/[id]',
-                  params: { id: contact.id }
-                })}
-              />
-            ))}
+            {item.data.map((contact: any) => renderContact(contact))}
           </View>
         )}
       />
@@ -96,6 +119,14 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.medium,
     marginVertical: Spacing.small,
     letterSpacing: 1,
+  },
+  contactWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  infoButton: {
+    padding: Spacing.small,
+    marginRight: Spacing.small,
   },
 });
 
