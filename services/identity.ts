@@ -1,6 +1,5 @@
 import PersistentStorage from '../utils/persistentStorage';
 import { Platform, Alert } from 'react-native';
-import base64 from 'react-native-base64';
 
 const STORAGE_KEY = 'app_passkeys';
 
@@ -44,25 +43,20 @@ class IdentityService {
    * @returns The newly created passkey
    */
   async createPassKey(): Promise<PassKey> {
-    // Generate a random human-readable name
     const name = this.generatePassKeyName();
     
     try {
-      // Check if WebAuthn is available in the environment
       if (typeof window !== 'undefined' && window.PublicKeyCredential) {
-        // Check if platform supports passkeys
         const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
         
         if (available) {
-          // Create a unique user ID for this passkey
           const userId = this.generateId();
           
-          // Create a credential creation options object
           const publicKeyCredentialCreationOptions = {
             challenge: this.generateChallenge(),
             rp: {
-              name: 'Cyphernet App',
-              id: window.location.hostname || 'cyphernet.app'
+              name: 'EPHEM',
+              id: window.location.hostname
             },
             user: {
               id: this.bufferFromString(userId),
@@ -82,26 +76,16 @@ class IdentityService {
             attestation: 'none'
           };
           
-          // Create the credential
           const credential = await navigator.credentials.create({
             publicKey: publicKeyCredentialCreationOptions
           }) as PublicKeyCredential;
+
+          const credentialId = this.base64FromBuffer(credential.rawId);
           
-          // Extract credential ID and public key
-          const credentialId = base64.encode(
-            new Uint8Array(credential.rawId)
-          );
-          
-          // Get attestation response
           const response = credential.response as AuthenticatorAttestationResponse;
-          const publicKey = base64.encode(
-            new Uint8Array(response.getPublicKey || new ArrayBuffer(0))
-          );
-          const authenticatorData = base64.encode(
-            new Uint8Array(response.getAuthenticatorData || new ArrayBuffer(0))
-          );
+          const publicKey = this.base64FromBuffer(response.getPublicKey || new ArrayBuffer(0));
+          const authenticatorData = this.base64FromBuffer(response.getAuthenticatorData || new ArrayBuffer(0));
           
-          // Create the passkey object
           const newPassKey: PassKey = {
             id: userId,
             name,
@@ -111,42 +95,18 @@ class IdentityService {
             authenticatorData
           };
           
-          // Store the new passkey
           const existingPasskeys = await this.getPassKeys();
           await PersistentStorage.set(STORAGE_KEY, [...existingPasskeys, newPassKey]);
           
           return newPassKey;
         }
       }
-      
-      // Fallback to simulated passkey if WebAuthn is not available
-      console.warn('WebAuthn not available, creating simulated passkey instead');
-      return this.createSimulatedPassKey(name);
-      
+
+      throw Error("WebAuthn not available");
     } catch (error) {
       console.error('Error creating passkey:', error);
-      // Fallback to simulated passkey on error
-      return this.createSimulatedPassKey(name);
+      throw error;
     }
-  }
-  
-  /**
-   * Create a simulated passkey (fallback when WebAuthn is not available)
-   * @param name The name for the passkey
-   * @returns A simulated passkey
-   */
-  private async createSimulatedPassKey(name: string): Promise<PassKey> {
-    const newPassKey: PassKey = {
-      id: this.generateId(),
-      name,
-      createdAt: new Date().toISOString(),
-    };
-
-    // Store the new passkey
-    const existingPasskeys = await this.getPassKeys();
-    await PersistentStorage.set(STORAGE_KEY, [...existingPasskeys, newPassKey]);
-    
-    return newPassKey;
   }
 
   /**
@@ -170,32 +130,24 @@ class IdentityService {
    */
   async deletePassKey(id: string): Promise<void> {
     try {
-      // First get the passkey to check if it's a real WebAuthn credential
       const passkeys = await this.getPassKeys();
       const passkey = passkeys.find(pk => pk.id === id);
       
       if (passkey?.credentialId && typeof window !== 'undefined' && window.PublicKeyCredential &&
-          // Check if the browser supports credential management
           'credentials' in navigator && 'preventSilentAccess' in navigator.credentials) {
         try {
-          // Try to remove the credential from the browser's credential store
-          // Note: Not all browsers support this yet, so we'll continue regardless of success
           await navigator.credentials.preventSilentAccess();
         } catch (e) {
           console.warn('Failed to revoke credential from browser store:', e);
-          // Continue with deletion anyway
         }
       }
       
-      // Remove from our storage
       const filteredPasskeys = passkeys.filter(pk => pk.id !== id);
       await PersistentStorage.set(STORAGE_KEY, filteredPasskeys);
       
-      // Force a reload of the passkeys after deletion
       console.log(`Successfully deleted passkey: ${id}`);
     } catch (error) {
       console.error('Error deleting passkey:', error);
-      throw error; // Re-throw the error so the UI can handle it
     }
   }
 
@@ -208,34 +160,27 @@ class IdentityService {
     try {
       const passkey = await this.getPassKeyById(id);
       if (!passkey) return false;
-      
-      // Check if this is a real passkey or simulated
+
       if (passkey.credentialId && typeof window !== 'undefined' && window.PublicKeyCredential) {
-        // This is a real passkey, verify using WebAuthn
-        
-        // Create a challenge for the authentication
         const challenge = this.generateChallenge();
-        
-        // Create authentication options
+
         const publicKeyCredentialRequestOptions = {
           challenge,
-          rpId: window.location.hostname || 'cyphernet.app',
+          rpId: window.location.hostname,
           allowCredentials: [{
             id: this.bufferFromBase64(passkey.credentialId),
             type: 'public-key'
           }],
-          userVerification: 'required', // Changed from 'preferred' to 'required' to force OS authentication UI
+          userVerification: 'required',
           timeout: 60000
         };
-        
+
         try {
-          // Request authentication with the passkey - this will trigger the OS authentication UI
           const credential = await navigator.credentials.get({
             publicKey: publicKeyCredentialRequestOptions
           }) as PublicKeyCredential;
-          
+
           if (credential) {
-            // Authentication successful
             await this.updatePassKeyUsage(id);
             return true;
           }
@@ -243,54 +188,13 @@ class IdentityService {
           return false;
         } catch (error) {
           console.error('WebAuthn authentication error:', error);
-          
-          // Show appropriate error message based on the error type
-          if (error instanceof DOMException) {
-            if (error.name === 'NotAllowedError') {
-              // User declined the authentication request
-              Alert.alert('Authentication Canceled', 'You canceled the authentication request.');
-            } else if (error.name === 'SecurityError') {
-              // Security error (e.g., already registered credential)
-              Alert.alert('Security Error', 'There was a security error during authentication.');
-            } else {
-              // Other DOMException
-              Alert.alert('Authentication Error', `${error.name}: ${error.message}`);
-            }
-          } else {
-            // Generic error
-            Alert.alert('Authentication Error', 'Failed to verify your identity. Please try again.');
-          }
-          
           return false;
         }
-      } else {
-        // For simulated passkeys, show a confirmation dialog to simulate OS authentication UI
-        // This gives a consistent user experience even when real WebAuthn isn't available
-        return new Promise((resolve) => {
-          Alert.alert(
-            'Confirm Identity',
-            `Authenticate to continue as "${passkey.name}"`,
-            [
-              {
-                text: 'Cancel',
-                style: 'cancel',
-                onPress: () => resolve(false)
-              },
-              {
-                text: 'Authenticate',
-                onPress: async () => {
-                  await this.updatePassKeyUsage(id);
-                  resolve(true);
-                }
-              }
-            ],
-            { cancelable: false }
-          );
-        });
       }
+
+      return false;
     } catch (error) {
       console.error('Error verifying passkey:', error);
-      Alert.alert('Authentication Error', 'Something went wrong during authentication. Please try again.');
       return false;
     }
   }
@@ -375,17 +279,27 @@ class IdentityService {
    * @returns An ArrayBuffer containing the decoded data
    */
   private bufferFromBase64(base64String: string): ArrayBuffer {
-    try {
-      return base64.decode(base64String);
-    } catch (e) {
-      // Fallback for environments that don't support atob
-      const binary = base64.decode(base64String);
-      const bytes = new Uint8Array(binary.length);
-      for (let i = 0; i < binary.length; i++) {
-        bytes[i] = binary.charCodeAt(i);
-      }
-      return bytes.buffer;
+    let binaryString = window.atob(base64String);
+
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
     }
+
+    return bytes.buffer;
+  }
+
+  private base64FromBuffer(buffer: ArrayBuffer): string {
+    const bytes = new Uint8Array(buffer);
+
+    let binary = '';
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+
+    return window.btoa(binary);
   }
 }
 

@@ -21,9 +21,8 @@ const LoginScreen = () => {
   const [loginInProgress, setLoginInProgress] = useState<string | null>(null);
   const [deletingAccountId, setDeletingAccountId] = useState<string | null>(null);
 
-  // Sort users by most recently used first
   const sortedUsers = [...users].sort((a, b) => {
-    if (!a.lastUsed) return 1; // Put items without lastUsed at the end
+    if (!a.lastUsed) return 1;
     if (!b.lastUsed) return -1;
     return new Date(b.lastUsed).getTime() - new Date(a.lastUsed).getTime();
   });
@@ -31,7 +30,6 @@ const LoginScreen = () => {
   const handleCreatePassKey = async () => {
     setIsCreatingPassKey(true);
     try {
-      // The createAccount function now creates a passkey with a random name
       await createAccount();
     } catch (error) {
       console.error('Failed to create passkey:', error);
@@ -45,8 +43,8 @@ const LoginScreen = () => {
     setLoginInProgress(userId);
     try {
       const success = await login(userId);
+
       if (!success) {
-        // Login failed - user likely canceled the authentication
         console.log('Login failed or was canceled');
       }
     } catch (error) {
@@ -56,34 +54,18 @@ const LoginScreen = () => {
     }
   };
 
-  const handleDeleteAccount = (userId: string, name: string) => {
-    Alert.alert(
-      'Delete Identity',
-      `Are you sure you want to delete "${name}"? This action cannot be undone.`,
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel'
-        },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              setDeletingAccountId(userId);
-              await deleteAccount(userId);
-              // Success feedback
-              console.log(`Identity ${name} successfully deleted`);
-            } catch (error) {
-              console.error('Failed to delete account:', error);
-              Alert.alert('Error', 'Failed to delete the identity. Please try again.');
-            } finally {
-              setDeletingAccountId(null);
-            }
-          }
-        }
-      ]
-    );
+  const handleDeleteAccount = async (userId: string, name: string) => {
+    try {
+      setDeletingAccountId(userId);
+      await deleteAccount(userId);
+
+      console.log(`Identity ${name} successfully deleted`);
+    } catch (error) {
+      console.error('Failed to delete account:', error);
+      Alert.alert('Error', 'Failed to delete the identity. Please try again.');
+    } finally {
+      setDeletingAccountId(null);
+    }
   };
 
   return (
@@ -211,7 +193,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.large,
   },
   listContentContainer: {
-    width: '100%', // Ensure the list uses full available width
+    width: '100%',
   },
   sectionTitle: {
     ...Typography.caption,
@@ -223,7 +205,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: Spacing.small,
-    width: '100%', // Ensure the container uses full available width
+    width: '100%',
   },
   accountButton: {
     flexDirection: 'row',
@@ -233,7 +215,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     borderLeftWidth: 2,
     borderLeftColor: Colors.primary,
-    flex: 1, // Make the button take available space
+    flex: 1,
   },
   accountButtonActive: {
     borderLeftColor: Colors.primary,
@@ -300,7 +282,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.primary,
     borderRadius: 4,
     borderStyle: 'dashed',
-    width: '100%', // Ensure button uses full width
+    width: '100%',
   },
   createAccountText: {
     ...Typography.button,

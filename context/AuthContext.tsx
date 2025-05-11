@@ -35,15 +35,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isPassKeySupported, setIsPassKeySupported] = useState(false);
 
-  // Load users (passkeys) and check if passkeys are supported
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        // Check if passkeys are supported on this device
         const supported = IdentityService.isSupported();
         setIsPassKeySupported(supported);
         
-        // Load all registered passkeys
         const passkeys = await IdentityService.getPassKeys();
         setUsers(passkeys);
       } catch (error) {
@@ -56,20 +53,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initializeAuth();
   }, []);
 
-  // Add AppState listener to clear ephemeral storage when app is closed or backgrounded
   useEffect(() => {
     const handleAppStateChange = (nextAppState: AppStateStatus) => {
       if (nextAppState === 'background' || nextAppState === 'inactive') {
-        // App is moving to background or about to be closed
         EphemeralStorage.clear();
         console.log('Ephemeral storage cleared due to app state change');
       }
     };
 
-    // Subscribe to app state changes
     const subscription = AppState.addEventListener('change', handleAppStateChange);
 
-    // Clean up the subscription when component unmounts
     return () => {
       subscription.remove();
     };
@@ -79,18 +72,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     
     try {
-      // Verify the passkey - this will now trigger OS authentication UI
       const isValid = await IdentityService.verifyPassKey(userId);
+      const user = await IdentityService.getPassKeyById(userId);
       
-      if (isValid) {
-        // Get the updated passkey (with lastUsed timestamp)
-        const user = await IdentityService.getPassKeyById(userId);
-        if (user) {
-          setCurrentUser(user);
-          setIsAuthenticated(true);
-          return true;
-        }
+      if (isValid && user) {
+        setCurrentUser(user);
+        setIsAuthenticated(true);
+        return true;
       }
+
       return false;
     } catch (error) {
       console.error('Error during login:', error);
@@ -103,11 +93,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     setIsLoading(true);
     
-    // Simulate logout process
     setTimeout(() => {
       setCurrentUser(null);
       setIsAuthenticated(false);
-      // Also clear ephemeral storage on logout
       EphemeralStorage.clear();
       setIsLoading(false);
     }, 800);
@@ -117,10 +105,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     
     try {
-      // Create a new passkey
       const newPassKey = await IdentityService.createPassKey();
       
-      // Update local state
       setUsers(prevUsers => [...prevUsers, newPassKey]);
       setCurrentUser(newPassKey);
       setIsAuthenticated(true);
@@ -135,14 +121,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     
     try {
-      // Delete the passkey from storage
       await IdentityService.deletePassKey(userId);
       
-      // Update local state - force a fresh fetch of passkeys
       const updatedPasskeys = await IdentityService.getPassKeys();
+      console.log("DEBUG", updatedPasskeys);
       setUsers(updatedPasskeys);
       
-      // If the deleted account was the current user, log them out
       if (currentUser && currentUser.id === userId) {
         setCurrentUser(null);
         setIsAuthenticated(false);
@@ -150,7 +134,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.error('Error deleting account:', error);
-      throw error; // Re-throw so the UI can handle it
+      throw error;
     } finally {
       setIsLoading(false);
     }

@@ -8,24 +8,8 @@ export default function SettingsScreen() {
   const { currentUser, logout } = useAuth();
   
   const handleLogout = () => {
-    Alert.alert(
-      'DISCONNECT',
-      'Disconnecting will erase all ephemeral conversations and keys. Continue?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        { 
-          text: 'Disconnect', 
-          onPress: () => {
-            logout();
-            router.replace('/');
-          },
-          style: 'destructive',
-        },
-      ],
-    );
+    logout();
+    router.replace('/');
   };
   
   return (
