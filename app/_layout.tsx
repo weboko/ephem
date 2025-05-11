@@ -1,13 +1,9 @@
-import { Ionicons } from '@expo/vector-icons';
 import { Slot } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
-import { StyleSheet, Platform } from 'react-native';
 import { AuthProvider } from '../context/AuthContext';
 import { ContactsProvider } from '../context/ContactsContext';
-import { Colors } from '../constants/theme';
+import { WakuProvider } from '../context/WakuContext';
 import { useEphemeralStorageCleanup } from '../utils/useEphemeralStorageCleanup';
-import EphemeralStorage from '../utils/ephemeralStorage';
 
 function AppContainer({ children }: { children: React.ReactNode }) {
   // Use our cleanup hook at the app root level
@@ -22,12 +18,14 @@ function AppContainer({ children }: { children: React.ReactNode }) {
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <ContactsProvider>
-        <AppContainer>
-          <StatusBar style="light" />
-          <Slot />
-        </AppContainer>
-      </ContactsProvider>
+      <WakuProvider>
+        <ContactsProvider>
+          <AppContainer>
+            <StatusBar style="light" />
+            <Slot />
+          </AppContainer>
+        </ContactsProvider>
+      </WakuProvider>
     </AuthProvider>
   );
 }
