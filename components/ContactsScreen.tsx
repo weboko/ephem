@@ -9,9 +9,7 @@ import ContactItem from "./ContactItem";
 
 const ContactsScreen = () => {
   const { contacts } = useContacts();
-  const { currentUser } = useAuth();
   
-  // Separate online and offline contacts
   const onlineContacts = contacts.filter(contact => contact.isOnline);
   const offlineContacts = contacts.filter(contact => !contact.isOnline);
 
@@ -23,7 +21,7 @@ const ContactsScreen = () => {
         </TouchableOpacity>
         
         <View>
-          <Text style={styles.headerTitle}>CYPHERNET</Text>
+          <Text style={styles.headerTitle}>EPHEM</Text>
           <Text style={styles.headerSubtitle}>SECURE • EPHEMERAL • PRIVATE</Text>
         </View>
         

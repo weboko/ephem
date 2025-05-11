@@ -71,7 +71,7 @@ const LoginScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.loginContainer}>
-        <Text style={styles.title}>CYPHERNET</Text>
+        <Text style={styles.title}>EPHEM</Text>
         <Text style={styles.subtitle}>EPHEMERAL CONNECTIONS</Text>
         
         {!isPassKeySupported && (

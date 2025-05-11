@@ -1,22 +1,42 @@
-import { View, Text, SafeAreaView, StyleSheet, TouchableOpacity, Share, Platform } from 'react-native';
+import { View, Text, SafeAreaView, StyleSheet, TouchableOpacity, Platform, Clipboard, Alert } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, CommonStyles, Typography, Spacing } from '../constants/theme';
+import { Colors, Typography, Spacing } from '../constants/theme';
 import { useAuth } from '../context/AuthContext';
+import { useState, useEffect, useCallback } from 'react';
+import QRCode from 'react-native-qrcode-svg';
 
 export default function QRCodeScreen() {
   const { currentUser } = useAuth();
+  const [connectionId, setConnectionId] = useState<string | null>(null);
+  const [specialLink, setSpecialLink] = useState<string | null>(null);
   
-  // Placeholder function to copy or share the contact link
-  const shareContactInfo = async () => {
+  // Generate a new UUID when the component mounts
+  useEffect(() => {
+    generateConnectionId();
+  }, []);
+  
+  // Generate a cryptographic UUID and create a special link
+  const generateConnectionId = useCallback(() => {
+    // Generate a UUID using crypto.randomUUID() API
+    const newId = crypto.randomUUID();
+    setConnectionId(newId);
+
+    const link = `https://weboko.github.io/ephem/connect/${newId}/placeholder/${currentUser?.id || ''}`;
+    setSpecialLink(link);
+  }, [currentUser?.id]);
+  
+  // Function to copy the link to clipboard
+  const copyLinkToClipboard = async () => {
+    if (!specialLink) return;
+    
     try {
-      await Share.share({
-        message: `Connect with me on CypherNet! User ID: ${currentUser?.id}`,
-        // In a real app, this would be a deep link to your app
-        url: `cyphernet://user/${currentUser?.id}`,
-      });
+      // Using the Clipboard API to copy the text
+      await Clipboard.setString(specialLink);
+      Alert.alert('Success', 'Link copied to clipboard');
     } catch (error) {
-      console.error('Error sharing contact info:', error);
+      console.error('Error copying link to clipboard:', error);
+      Alert.alert('Error', 'Failed to copy link to clipboard');
     }
   };
   
@@ -26,7 +46,7 @@ export default function QRCodeScreen() {
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={24} color={Colors.primary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>IDENTITY CODE</Text>
+        <Text style={styles.headerTitle}>ONE-TIME IDENTITY CODE</Text>
         <View style={styles.placeholder}></View>
       </View>
       
@@ -34,31 +54,38 @@ export default function QRCodeScreen() {
         <Text style={styles.subtitle}>SCAN TO ESTABLISH EPHEMERAL CONNECTION</Text>
         
         <View style={styles.qrCodeContainer}>
-          {/* Placeholder for actual QR code - would use a library like react-native-qrcode-svg */}
-          <View style={styles.qrPlaceholder}>
-            <Ionicons name="qr-code" size={150} color={Colors.primary} />
-            <Text style={styles.ephemeralNotice}>EXPIRES ON APP CLOSE</Text>
-          </View>
+          {specialLink ? (
+            <View style={styles.qrPlaceholder}>
+              <QRCode 
+                value={specialLink}
+                size={180}
+                color={Colors.primary}
+                backgroundColor={Colors.background}
+              />
+            </View>
+          ) : (
+            <View style={styles.qrPlaceholder}>
+              <Ionicons name="qr-code" size={150} color={Colors.primary} />
+              <Text style={styles.ephemeralNotice}>GENERATING...</Text>
+            </View>
+          )}
         </View>
         
-        <View style={styles.userInfo}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {currentUser?.name
-                .split(' ')
-                .map(n => n[0])
-                .join('')
-                .toUpperCase()
-                .substring(0, 2)}
-            </Text>
-          </View>
-          <Text style={styles.userName}>{currentUser?.name}</Text>
-          <Text style={styles.userId}>ID: {currentUser?.id}</Text>
+        <View style={styles.linkContainer}>
+          <Text style={styles.linkLabel}>SECURE CONNECTION LINK:</Text>
+          <Text style={styles.linkText} numberOfLines={1} ellipsizeMode="middle">
+            {specialLink || 'Generating...'}
+          </Text>
         </View>
         
-        <TouchableOpacity style={styles.shareButton} onPress={shareContactInfo}>
-          <Ionicons name="share-outline" size={20} color={Colors.background} />
-          <Text style={styles.shareButtonText}>SHARE ONE-TIME KEY</Text>
+        <TouchableOpacity style={styles.shareButton} onPress={copyLinkToClipboard}>
+          <Ionicons name="copy-outline" size={20} color={Colors.background} />
+          <Text style={styles.shareButtonText}>COPY ONE-TIME LINK</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={styles.refreshButton} onPress={generateConnectionId}>
+          <Ionicons name="refresh-outline" size={20} color={Colors.primary} />
+          <Text style={styles.refreshButtonText}>GENERATE NEW CODE</Text>
         </TouchableOpacity>
         
         <Text style={styles.securityNote}>
@@ -113,7 +140,7 @@ const styles = StyleSheet.create({
     padding: Spacing.medium,
     backgroundColor: Colors.card,
     borderRadius: 6,
-    marginBottom: Spacing.large,
+    marginBottom: Spacing.medium,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
@@ -136,6 +163,28 @@ const styles = StyleSheet.create({
     fontSize: 8,
     letterSpacing: 1.5,
     fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+  },
+  linkContainer: {
+    width: '100%',
+    marginBottom: Spacing.medium,
+    padding: Spacing.small,
+    backgroundColor: Colors.card,
+    borderRadius: 4,
+    borderLeftWidth: 2,
+    borderLeftColor: Colors.primary,
+  },
+  linkLabel: {
+    ...Typography.caption,
+    color: Colors.primary,
+    fontSize: 10,
+    marginBottom: 4,
+    letterSpacing: 1,
+  },
+  linkText: {
+    ...Typography.caption,
+    color: Colors.text,
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    fontSize: 10,
   },
   userInfo: {
     alignItems: 'center',
@@ -174,9 +223,28 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.small,
     paddingHorizontal: Spacing.large,
     borderRadius: 4,
+    marginBottom: Spacing.medium,
   },
   shareButtonText: {
     color: Colors.background,
+    fontWeight: '600',
+    marginLeft: Spacing.small,
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    letterSpacing: 0.5,
+  },
+  refreshButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+    paddingVertical: Spacing.small,
+    paddingHorizontal: Spacing.large,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: Colors.primary,
+    borderStyle: 'dashed',
+  },
+  refreshButtonText: {
+    color: Colors.primary,
     fontWeight: '600',
     marginLeft: Spacing.small,
     fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
