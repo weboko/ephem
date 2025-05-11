@@ -44,7 +44,7 @@ export default function QRCodeScreen() {
       pathname: '/connect/[id]/[token]/[userId]',
       params: { 
         id: connectionId,
-        token: 'placeholder',
+        token: 'pubkey',
         userId: currentUser.id
       }
     });
