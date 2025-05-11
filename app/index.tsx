@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { View, Text, SafeAreaView, StyleSheet, TouchableOpacity, FlatList, Image } from "react-native";
+import { View, Text, SafeAreaView, StyleSheet, TouchableOpacity, FlatList, Image, Platform } from "react-native";
 import { useAuth } from "../context/AuthContext";
 import { useContacts, Contact } from "../context/ContactsContext";
 import { Colors, CommonStyles, Typography, Spacing } from "../constants/theme";
@@ -16,7 +16,7 @@ const Avatar = ({ name, isOnline }: { name: string; isOnline: boolean }) => {
     .substring(0, 2);
 
   return (
-    <View style={[styles.avatar, { backgroundColor: Colors.primary }]}>
+    <View style={[styles.avatar, isOnline ? styles.avatarOnline : {}]}>
       <Text style={styles.avatarText}>{initials}</Text>
       {isOnline && <View style={styles.onlineIndicator} />}
     </View>
@@ -30,11 +30,16 @@ const ContactItem = ({ contact, onPress }: { contact: Contact; onPress: () => vo
       <Avatar name={contact.name} isOnline={contact.isOnline} />
       <View style={styles.contactInfo}>
         <Text style={styles.contactName}>{contact.name}</Text>
-        <Text style={styles.lastSeen}>
-          {contact.isOnline ? "Online" : `Last seen: ${contact.lastSeen}`}
-        </Text>
+        <View style={styles.lastSeenContainer}>
+          <Text style={[styles.lastSeen, contact.isOnline ? styles.onlineText : {}]}>
+            {contact.isOnline ? "ONLINE" : `LAST SEEN: ${contact.lastSeen}`}
+          </Text>
+          {!contact.isOnline && (
+            <Text style={styles.ephemeralTag}>EPHEMERAL</Text>
+          )}
+        </View>
       </View>
-      <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
+      <Ionicons name="chevron-forward" size={20} color={Colors.primary} />
     </TouchableOpacity>
   );
 };
@@ -46,7 +51,8 @@ const LoginScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.loginContainer}>
-        <Text style={styles.title}>Select an Account</Text>
+        <Text style={styles.title}>CYPHERNET</Text>
+        <Text style={styles.subtitle}>EPHEMERAL CONNECTIONS</Text>
         
         <FlatList
           data={users}
@@ -68,7 +74,7 @@ const LoginScreen = () => {
           onPress={() => createAccount(`User ${Math.floor(Math.random() * 1000)}`)}
         >
           <Ionicons name="add-circle-outline" size={24} color={Colors.primary} />
-          <Text style={styles.createAccountText}>Create New Account</Text>
+          <Text style={styles.createAccountText}>CREATE NEW IDENTITY</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -91,7 +97,10 @@ const ContactsScreen = () => {
           <Ionicons name="qr-code-outline" size={24} color={Colors.primary} />
         </TouchableOpacity>
         
-        <Text style={styles.headerTitle}>Contacts</Text>
+        <View>
+          <Text style={styles.headerTitle}>CYPHERNET</Text>
+          <Text style={styles.headerSubtitle}>SECURE • EPHEMERAL • PRIVATE</Text>
+        </View>
         
         <TouchableOpacity style={styles.headerButton} onPress={() => router.push('/settings')}>
           <Ionicons name="settings-outline" size={24} color={Colors.primary} />
@@ -100,8 +109,8 @@ const ContactsScreen = () => {
       
       <FlatList
         data={[
-          { title: 'Online', data: onlineContacts },
-          { title: 'Offline', data: offlineContacts }
+          { title: 'ONLINE', data: onlineContacts },
+          { title: 'OFFLINE', data: offlineContacts }
         ]}
         keyExtractor={(item) => item.title}
         renderItem={({ item }) => (
@@ -142,11 +151,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.medium,
     paddingVertical: Spacing.small,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: Colors.primary,
+    backgroundColor: '#0a0a0a',
   },
   headerTitle: {
     ...Typography.title,
+    color: Colors.primary,
     textAlign: 'center',
+    letterSpacing: 1.5,
+  },
+  headerSubtitle: {
+    fontSize: 10,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    letterSpacing: 1,
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
   headerButton: {
     padding: Spacing.small,
@@ -156,29 +175,38 @@ const styles = StyleSheet.create({
   },
   sectionHeader: {
     ...Typography.caption,
+    color: Colors.primary,
     marginHorizontal: Spacing.medium,
     marginVertical: Spacing.small,
-    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   contactItem: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: Spacing.medium,
     paddingVertical: Spacing.medium,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0, 255, 65, 0.1)',
   },
   avatar: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.card,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  avatarOnline: {
+    borderColor: Colors.primary,
   },
   avatarText: {
-    color: Colors.text,
+    color: Colors.primary,
     fontSize: 18,
     fontWeight: '600',
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
   onlineIndicator: {
     position: 'absolute',
@@ -199,8 +227,24 @@ const styles = StyleSheet.create({
     ...Typography.body,
     marginBottom: 2,
   },
+  lastSeenContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   lastSeen: {
     ...Typography.caption,
+    fontSize: 11,
+    letterSpacing: 0.5,
+  },
+  onlineText: {
+    color: Colors.online,
+  },
+  ephemeralTag: {
+    fontSize: 8,
+    color: Colors.faded,
+    marginLeft: 8,
+    letterSpacing: 1,
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
   loginContainer: {
     flex: 1,
@@ -208,16 +252,30 @@ const styles = StyleSheet.create({
   },
   title: {
     ...Typography.title,
+    color: Colors.primary,
+    fontSize: 28,
     textAlign: 'center',
-    marginVertical: Spacing.large,
+    marginTop: Spacing.large * 2,
+    letterSpacing: 3,
+    fontWeight: 'bold',
+  },
+  subtitle: {
+    color: Colors.textSecondary,
+    fontSize: 12,
+    textAlign: 'center',
+    marginBottom: Spacing.large * 2,
+    letterSpacing: 2,
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
   accountButton: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: Spacing.medium,
     backgroundColor: Colors.card,
-    borderRadius: 10,
+    borderRadius: 4,
     marginBottom: Spacing.small,
+    borderLeftWidth: 2,
+    borderLeftColor: Colors.primary,
   },
   accountName: {
     ...Typography.body,
@@ -225,8 +283,9 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: Colors.border,
+    backgroundColor: Colors.primary,
     marginVertical: Spacing.small,
+    opacity: 0.3,
   },
   createAccountButton: {
     flexDirection: 'row',
@@ -237,11 +296,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: Colors.primary,
-    borderRadius: 10,
+    borderRadius: 4,
     borderStyle: 'dashed',
   },
   createAccountText: {
     ...Typography.button,
     marginLeft: Spacing.small,
+    letterSpacing: 1,
+    fontSize: 14,
   },
 });
