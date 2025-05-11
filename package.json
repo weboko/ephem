@@ -8,7 +8,10 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "predeploy": "expo export -p web",
+    "deploy": "gh-pages -d dist",
+    "build:web": "expo export -p web"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
@@ -50,7 +53,9 @@
     "@types/react": "~19.0.10",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~9.2.0",
+    "gh-pages": "^6.3.0",
     "typescript": "~5.8.3"
   },
-  "private": true
+  "private": true,
+  "homepage": "https://weboko.github.io/ephem"
 }
