@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { LoadingScreen } from '../components/LoadingScreen';
 
 export type Contact = {
   id: string;
@@ -10,6 +11,7 @@ export type Contact = {
 
 type ContactsContextType = {
   contacts: Contact[];
+  isLoading: boolean;
   addContact: (contact: Contact) => void;
   removeContact: (id: string) => void;
   toggleOnlineStatus: (id: string) => void;
@@ -37,7 +39,26 @@ export const useContacts = () => {
 };
 
 export function ContactsProvider({ children }: { children: React.ReactNode }) {
-  const [contacts, setContacts] = useState<Contact[]>(defaultContacts);
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Simulate loading the contacts data
+  useEffect(() => {
+    const loadContacts = async () => {
+      try {
+        // In a real app, you might fetch these from an API or storage
+        setTimeout(() => {
+          setContacts(defaultContacts);
+          setIsLoading(false);
+        }, 1200); // Simulate network delay
+      } catch (error) {
+        console.error('Error loading contacts:', error);
+        setIsLoading(false);
+      }
+    };
+
+    loadContacts();
+  }, []);
 
   const addContact = (contact: Contact) => {
     setContacts([...contacts, contact]);
@@ -59,10 +80,15 @@ export function ContactsProvider({ children }: { children: React.ReactNode }) {
 
   const value = {
     contacts,
+    isLoading,
     addContact,
     removeContact,
     toggleOnlineStatus,
   };
+
+  if (isLoading) {
+    return <LoadingScreen message="SYNCING CONTACTS" />;
+  }
 
   return <ContactsContext.Provider value={value}>{children}</ContactsContext.Provider>;
 }

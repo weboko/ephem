@@ -44,7 +44,7 @@ export class Waku implements IWaku {
 
         await node.waitForPeers(
           [Protocols.Filter, Protocols.LightPush],
-          5 * 1000
+          60 * 1000 // one minute
         );
       } catch(e) {
         console.error("Failed to create Waku instance:", e);
